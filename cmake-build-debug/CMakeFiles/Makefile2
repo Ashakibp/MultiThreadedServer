@@ -65,39 +65,39 @@ CMAKE_SOURCE_DIR = /Users/Aaron/Downloads/OperatingSystems
 CMAKE_BINARY_DIR = /Users/Aaron/Downloads/OperatingSystems/cmake-build-debug
 
 #=============================================================================
-# Target rules for target CMakeFiles/classFiles.dir
+# Target rules for target CMakeFiles/OperatingSystems.dir
 
 # All Build rule for target.
-CMakeFiles/classFiles.dir/all:
-	$(MAKE) -f CMakeFiles/classFiles.dir/build.make CMakeFiles/classFiles.dir/depend
-	$(MAKE) -f CMakeFiles/classFiles.dir/build.make CMakeFiles/classFiles.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/Users/Aaron/Downloads/OperatingSystems/cmake-build-debug/CMakeFiles --progress-num=1,2,3 "Built target classFiles"
-.PHONY : CMakeFiles/classFiles.dir/all
+CMakeFiles/OperatingSystems.dir/all:
+	$(MAKE) -f CMakeFiles/OperatingSystems.dir/build.make CMakeFiles/OperatingSystems.dir/depend
+	$(MAKE) -f CMakeFiles/OperatingSystems.dir/build.make CMakeFiles/OperatingSystems.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/Users/Aaron/Downloads/OperatingSystems/cmake-build-debug/CMakeFiles --progress-num=1,2,3 "Built target OperatingSystems"
+.PHONY : CMakeFiles/OperatingSystems.dir/all
 
 # Include target in all.
-all: CMakeFiles/classFiles.dir/all
+all: CMakeFiles/OperatingSystems.dir/all
 
 .PHONY : all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/classFiles.dir/rule: cmake_check_build_system
+CMakeFiles/OperatingSystems.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /Users/Aaron/Downloads/OperatingSystems/cmake-build-debug/CMakeFiles 3
-	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/classFiles.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/OperatingSystems.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /Users/Aaron/Downloads/OperatingSystems/cmake-build-debug/CMakeFiles 0
-.PHONY : CMakeFiles/classFiles.dir/rule
+.PHONY : CMakeFiles/OperatingSystems.dir/rule
 
 # Convenience name for target.
-classFiles: CMakeFiles/classFiles.dir/rule
+OperatingSystems: CMakeFiles/OperatingSystems.dir/rule
 
-.PHONY : classFiles
-
-# clean rule for target.
-CMakeFiles/classFiles.dir/clean:
-	$(MAKE) -f CMakeFiles/classFiles.dir/build.make CMakeFiles/classFiles.dir/clean
-.PHONY : CMakeFiles/classFiles.dir/clean
+.PHONY : OperatingSystems
 
 # clean rule for target.
-clean: CMakeFiles/classFiles.dir/clean
+CMakeFiles/OperatingSystems.dir/clean:
+	$(MAKE) -f CMakeFiles/OperatingSystems.dir/build.make CMakeFiles/OperatingSystems.dir/clean
+.PHONY : CMakeFiles/OperatingSystems.dir/clean
+
+# clean rule for target.
+clean: CMakeFiles/OperatingSystems.dir/clean
 
 .PHONY : clean
 

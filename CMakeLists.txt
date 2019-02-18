@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
-project(classFiles C)
+project(OperatingSystems C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(classFiles
+add_executable(OperatingSystems
         client.c
         server.c)
