@@ -15,7 +15,7 @@
 #define LOG        44
 #define FORBIDDEN 403
 #define NOTFOUND  404
-//yo
+//shakib is a slutty nut licking docnkey selling goat haggler
 struct {
 	char *ext;
 	char *filetype;
