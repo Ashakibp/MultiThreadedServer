@@ -1,3 +1,3 @@
-/Users/Aaron/Downloads/OperatingSystems/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/Users/Aaron/Downloads/OperatingSystems/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/Aaron/Downloads/OperatingSystems/cmake-build-debug/CMakeFiles/OperatingSystems.dir
+/cygdrive/c/Users/yudi/OneDrive/Documents/Yeshiva University Documents/Spring 2019/Operating_Systems/MultiThreadedServer/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/cygdrive/c/Users/yudi/OneDrive/Documents/Yeshiva University Documents/Spring 2019/Operating_Systems/MultiThreadedServer/cmake-build-debug/CMakeFiles/OperatingSystems.dir
+/cygdrive/c/Users/yudi/OneDrive/Documents/Yeshiva University Documents/Spring 2019/Operating_Systems/MultiThreadedServer/cmake-build-debug/CMakeFiles/edit_cache.dir

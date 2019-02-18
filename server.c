@@ -15,7 +15,7 @@
 #define LOG        44
 #define FORBIDDEN 403
 #define NOTFOUND  404
-//YUDI IS A CUCK
+//Shakib is a slut nut fucker cuck
 struct {
 	char *ext;
 	char *filetype;
