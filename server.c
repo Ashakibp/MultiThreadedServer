@@ -15,12 +15,9 @@
 #define LOG        44
 #define FORBIDDEN 403
 #define NOTFOUND  404
-//YUDI
-//IS
-//A
-//LITTLE
-//CUCK
-//CUCK CUCK CUCK CUCK CUCK CUCK CUCK
+
+
+
 struct {
 	char *ext;
 	char *filetype;
