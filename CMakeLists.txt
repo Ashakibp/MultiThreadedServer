@@ -4,5 +4,4 @@ project(OperatingSystems C)
 set(CMAKE_C_STANDARD 11)
 
 add_executable(OperatingSystems
-        client.c
         server.c)
