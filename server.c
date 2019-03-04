@@ -9,13 +9,23 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 #define VERSION 23
 #define BUFSIZE 8096
 #define ERROR      42
 #define LOG        44
 #define FORBIDDEN 403
 #define NOTFOUND  404
+#include <semaphore.h>
 
+
+pthread_cond_t qu_empty_cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t qu_full_cond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t qu_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+
+
+sem_t mutex;
 
 
 struct {
@@ -34,7 +44,24 @@ struct {
 	{"html","text/html" },  
 	{0,0} };
 
+
+struct job{
+    int socketfd;
+    int hit;
+} ;
+
+
+struct queue{
+	int head;
+	int tail;
+	struct job* jobs;
+	int size;
+	int maxSize;
+} queue1;
+
 static int dummy; //keep compiler happy
+
+
 
 void logger(int type, char *s1, char *s2, int socket_fd)
 {
@@ -69,7 +96,7 @@ void web(int fd, int hit)
 	int j, file_fd, buflen;
 	long i, ret, len;
 	char * fstr;
-	static char buffer[BUFSIZE+1]; /* static so zero filled */
+	char* buffer = calloc(BUFSIZE+1, 1); /* static so zero filled */
 
 	ret =read(fd,buffer,BUFSIZE); 	/* read Web request in one go */
 	if(ret == 0 || ret == -1) {	/* read failure stop now */
@@ -131,24 +158,82 @@ void web(int fd, int hit)
 		dummy = write(fd,buffer,ret);
 	}
 	sleep(1);	/* allow socket to drain before signalling the socket is closed */
+	free(buffer);
 	close(fd);
-	exit(1);
+
+}
+
+struct job dequeJob(){
+	int sock = -1;
+	int hit = -1;
+	sem_wait(&mutex);
+	if(queue1.size){
+		hit = queue1.jobs[queue1.head].hit;
+		sock = queue1.jobs[queue1.head].socketfd;
+		queue1.head = (queue1.head+1) % queue1.maxSize;
+		queue1.size--;
+	}
+	sem_post(&mutex);
+	struct job x = {sock, hit};
+	return x;
+}
+/**
+ * just an empty functions for making threads for the pool.
+ */
+void waitForJobs(){
+    while(1){
+    	struct job x = dequeJob();
+    	if(x.hit != -1){
+			web(x.socketfd, x.hit);
+    	}
+    }
+}
+
+/**
+ * Builds out our Thread Pool
+ * @param pool
+ * @param sizeOfPool
+ */
+void buildThreadPool(pthread_t *pool, int sizeOfPool){
+    int status, i;
+    for(i = 0; i<sizeOfPool; i++){
+        status = pthread_create(&pool[i], NULL, waitForJobs, NULL);
+        if(status != 0){
+            printf("ERROR: MAKING THREAD POOL");
+            exit(0);
+        }
+    }
+}
+
+void enqueJob(struct job *job){
+
+	sem_wait(&mutex);
+	if(queue1.size != queue1.maxSize){
+		queue1.jobs[queue1.tail].hit = job->hit;
+		queue1.jobs[queue1.tail].socketfd = job->socketfd;
+		queue1.tail = (queue1.tail+1) % queue1.maxSize;
+		queue1.size++;
+	}
+	sem_post(&mutex);
 }
 
 int main(int argc, char **argv)
 {
-	int i, port, pid, listenfd, socketfd, hit;
+
+    sem_init(&mutex, 0, 1);
+    sem_wait(&mutex);
+    int i, port, pid, listenfd, socketfd, hit, numOfThreads;
 	socklen_t length;
 	static struct sockaddr_in cli_addr; /* static = initialised to zeros */
 	static struct sockaddr_in serv_addr; /* static = initialised to zeros */
 
-	if( argc < 3  || argc > 3 || !strcmp(argv[1], "-?") ) {
+	if( argc < 5  || argc > 5 || !strcmp(argv[1], "-?") ) {
 		(void)printf("hint: nweb Port-Number Top-Directory\t\tversion %d\n\n"
 	"\tnweb is a small and very safe mini web server\n"
 	"\tnweb only servers out file/web pages with extensions named below\n"
 	"\t and only from the named directory or its sub-directories.\n"
 	"\tThere is no fancy features = safe and secure.\n\n"
-	"\tExample: nweb 8181 /home/nwebdir &\n\n"
+	"\tExample: nweb 8181 /home/nwebdir 8 &\n\n"
 	"\tOnly Supports:", VERSION);
 		for(i=0;extensions[i].ext != 0;i++)
 			(void)printf(" %s",extensions[i].ext);
@@ -169,6 +254,22 @@ int main(int argc, char **argv)
 		(void)printf("ERROR: Can't Change to directory %s\n",argv[2]);
 		exit(4);
 	}
+	//Cant have fewer than 1 thread!!
+	if(!argv[3]){
+        (void) printf("ERROR: Cannot have fewer than 1 thread!!!!\n");
+	}
+    if(!argv[4]){
+        (void) printf("ERROR: Cannot have fewer than 1 job in queue you DOINK!!!!\n");
+    }
+	numOfThreads = atoi(argv[3]);
+    int bufferSize = atoi(argv[4]);
+    pthread_t pool[numOfThreads];
+	buildThreadPool(pool, numOfThreads);
+    queue1.maxSize = bufferSize;
+    queue1.head = 0;
+    queue1.tail = 0;
+    queue1.size = 0;
+    queue1.jobs = (struct job*) calloc(bufferSize,sizeof(struct job));
 	/* Become deamon + unstopable and no zombies children (= no wait()) */
 //	if(fork() != 0)//We add code here
 //		return 0; /* parent returns OK to shell */
@@ -176,7 +277,7 @@ int main(int argc, char **argv)
 	(void)signal(SIGHUP, SIG_IGN); /* ignore terminal hangups */
 	for(i=0;i<32;i++)
 		(void)close(i);		/* close open files */
-	(void)setpgrp();		/* break away from process group */
+
 	logger(LOG,"nweb starting",argv[1],getpid());
 	/* setup the network socket */
 	if((listenfd = socket(AF_INET, SOCK_STREAM,0)) <0)
@@ -193,18 +294,13 @@ int main(int argc, char **argv)
 		logger(ERROR,"system call","listen",0);
 	for(hit=1; ;hit++) {
 		length = sizeof(cli_addr);
-		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, &length)) < 0)
-			logger(ERROR,"system call","accept",0);
-		if((pid = fork()) < 0) {
-			logger(ERROR,"system call","fork",0);
+		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, &length)) < 0) {
+            logger(ERROR, "system call", "accept", 0);
 		}
 		else {
-			if(pid == 0) { 	/* child */
-				(void)close(listenfd);
-				web(socketfd,hit); /* never returns */
-			} else { 	/* parent */
-				(void)close(socketfd);
-			}
-		}
+            struct job job1 = {socketfd, hit};
+            enqueJob(&job1);
+            sleep(1);
+        }
 	}
 }
