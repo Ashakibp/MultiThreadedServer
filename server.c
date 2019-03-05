@@ -47,6 +47,7 @@ struct {
 struct job{
     int socketfd;
     int hit;
+    int priority;
 } ;
 
 
@@ -60,12 +61,10 @@ struct queue{
 
 static int dummy; //keep compiler happy
 
-
-
 void logger(int type, char *s1, char *s2, int socket_fd)
 {
 	int fd ;
-	char logbuffer[BUFSIZE*2];
+	char* logbuffer = calloc(BUFSIZE*2, 1);
 
 	switch (type) {
 	case ERROR: (void)sprintf(logbuffer,"ERROR: %s:%s Errno=%d exiting pid=%d",s1, s2, errno,getpid()); 
@@ -90,7 +89,7 @@ void logger(int type, char *s1, char *s2, int socket_fd)
 		dummy = write(fd,"\n",1);
 		(void)close(fd);
 	}
-	if(type == ERROR || type == NOTFOUND || type == FORBIDDEN);
+//	if(type == ERROR || type == NOTFOUND || type == FORBIDDEN);
 }
 
 /* this is a child web server process, so we can exit on errors */
@@ -150,9 +149,8 @@ void web(int fd, int hit, int threadID)
 	logger(LOG,"Header",buffer,hit);
 	char* str = calloc(10,1);
 	sprintf( str, "%d", threadID );
-	free(str)
-	logger(LOG,"THREAD",str,hit);
-	printf("Handled by thread %d", i);
+	logger(LOG,"Handled By Thread: ",str,hit);
+    free(str);
 	dummy = write(fd,buffer,strlen(buffer));
 	
     /* Send the statistical headers described in the paper, example below
@@ -185,6 +183,7 @@ struct job dequeJob(){
 	struct job x = {};
 	x.socketfd = sock;
 	x.hit = hit;
+	x.priority = 1;
 	return x;
 }
 /**
@@ -194,7 +193,6 @@ void waitForJobs(int i){
     while(1){
     	struct job x = dequeJob();
     	if(x.hit != -1){
-			(void)printf("THREAD %d HANDLING DIS SHIT", i);
 			web(x.socketfd, x.hit, i);
     	} else{
     	    //Add Condition Variable here
@@ -224,6 +222,7 @@ void enqueJob(struct job *job){
 	if(queue1.size != queue1.maxSize){
 		queue1.jobs[queue1.tail].hit = job->hit;
 		queue1.jobs[queue1.tail].socketfd = job->socketfd;
+        queue1.jobs[queue1.tail].priority = job->priority;
 		queue1.tail = (queue1.tail+1) % queue1.maxSize;
 		queue1.size++;
 		if(queue1.size == 1){
@@ -239,7 +238,7 @@ int main(int argc, char **argv)
     pthread_mutex_init(&pthread_mutex, NULL);
     pthread_mutex_unlock(&pthread_mutex);
 
-    int i, port, pid, listenfd, socketfd, hit, numOfThreads;
+    int i, port, listenfd, socketfd, hit, numOfThreads;
 	socklen_t length;
 	static struct sockaddr_in cli_addr; /* static = initialised to zeros */
 	static struct sockaddr_in serv_addr; /* static = initialised to zeros */
@@ -315,7 +314,7 @@ int main(int argc, char **argv)
             logger(ERROR, "system call", "accept", 0);
 		}
 		else {
-            struct job job1 = {socketfd, hit};
+            struct job job1 = {socketfd, hit, 1};
             enqueJob(&job1);
             //Wake any sleeping threads
         }
