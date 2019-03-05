@@ -150,6 +150,7 @@ void web(int fd, int hit, int threadID)
 	logger(LOG,"Header",buffer,hit);
 	char* str = calloc(10,1);
 	sprintf( str, "%d", threadID );
+	free(str)
 	logger(LOG,"THREAD",str,hit);
 	printf("Handled by thread %d", i);
 	dummy = write(fd,buffer,strlen(buffer));

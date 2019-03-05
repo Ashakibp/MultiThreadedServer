@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
   numOfThreads = atoi(argv[3]);
   Filename1 = argv[4];
 
-  pthread_t threads[numOfThreads];
+  pthread_t threads = calloc(numOfThreads, sizeof(pthread_t));
   int status, i;
     for(i = 0; i<numOfThreads; i++){
         status = pthread_create(&threads[i], NULL, doThreadJob ,NULL);
@@ -120,6 +120,6 @@ int main(int argc, char **argv) {
     /* END BUILD THREADPOOL*/
 
 
-
+doThreadJob();
   return 0;
 }
