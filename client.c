@@ -8,8 +8,18 @@
 /* Network */
 #include <netdb.h>
 #include <sys/socket.h>
+#include <pthread.h>
 
 #define BUF_SIZE 100
+
+//N for the number of created threads.
+// client cmd args  - client [host] [portnum] [threads] [schedalg] [filename1] [filename2]
+char* Host;
+char* Portnum;
+int numOfThreads;
+char* Schedalg;//implement soon
+char* Filename1;
+char* Filename2;// implement soon
 
 // Get host information (used to establishConnection)
 struct addrinfo *getHostInfo(char* host, char* port) {
@@ -60,32 +70,56 @@ void GET(int clientfd, char *path) {
   sprintf(req, "GET %s HTTP/1.0\r\n\r\n", path);
   send(clientfd, req, strlen(req), 0);
 }
+void doThreadJob(){
+    char* buf = calloc(BUF_SIZE,1);
+    while(1){
+        int clientfd;
+        // Establish connection with <hostname>:<port>
+        clientfd = establishConnection(getHostInfo(Host, Portnum));
+        if (clientfd == -1) {
+            fprintf(stderr,
+                    "[main:73] Failed to connect to: %s:%s%s \n",
+                    Host, Portnum, Filename1);
+
+        }
+
+        // Send GET request > stdout
+
+        GET(clientfd, Filename1);
+        while (recv(clientfd, buf, BUF_SIZE, 0) > 0) {
+            fputs(buf, stdout);
+            memset(buf, 0, BUF_SIZE);
+        }
+
+        close(clientfd);
+    }
+}
+
 
 int main(int argc, char **argv) {
-  int clientfd;
-  char buf[BUF_SIZE];
-
-  if (argc != 4) {
+  if (argc != 5) {
     fprintf(stderr, "USAGE: ./httpclient <hostname> <port> <request path>\n");
     return 1;
   }
 
-  // Establish connection with <hostname>:<port>
-  clientfd = establishConnection(getHostInfo(argv[1], argv[2]));
-  if (clientfd == -1) {
-    fprintf(stderr,
-            "[main:73] Failed to connect to: %s:%s%s \n",
-            argv[1], argv[2], argv[3]);
-    return 3;
-  }
+  /* building a thread pool to bombard the shit out of My Irani's spineless server*/
+  Host = argv[1];
+  Portnum = argv[2];
+  numOfThreads = atoi(argv[3]);
+  Filename1 = argv[4];
 
-  // Send GET request > stdout
-  GET(clientfd, argv[3]);
-  while (recv(clientfd, buf, BUF_SIZE, 0) > 0) {
-    fputs(buf, stdout);
-    memset(buf, 0, BUF_SIZE);
-  }
+  pthread_t threads[numOfThreads];
+  int status, i;
+    for(i = 0; i<numOfThreads; i++){
+        status = pthread_create(&threads[i], NULL, doThreadJob ,NULL);
+        if(status != 0){
+            printf("ERROR: MAKING THREAD POOL");
+            exit(0);
+        }
+    }
+    /* END BUILD THREADPOOL*/
 
-  close(clientfd);
+
+
   return 0;
 }
