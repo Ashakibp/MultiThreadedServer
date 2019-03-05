@@ -94,12 +94,12 @@ void logger(int type, char *s1, char *s2, int socket_fd)
 }
 
 /* this is a child web server process, so we can exit on errors */
-void web(int fd, int hit)
+void web(int fd, int hit, int threadID)
 {
 	int j, file_fd, buflen;
 	long i, ret, len;
 	char * fstr;
-	char* buffer = calloc(BUFSIZE+1, 1); /* static so zero filled */
+	char* buffer = calloc(BUFSIZE+1, 1); /* calloc so zero filled and shared amongst threads*/
 
 	ret =read(fd,buffer,BUFSIZE); 	/* read Web request in one go */
 	if(ret == 0 || ret == -1) {	/* read failure stop now */
@@ -148,6 +148,10 @@ void web(int fd, int hit)
 	      (void)lseek(file_fd, (off_t)0, SEEK_SET); /* lseek back to the file start ready for reading */
           (void)sprintf(buffer,"HTTP/1.1 200 OK\nServer: nweb/%d.0\nContent-Length: %ld\nConnection: close\nContent-Type: %s\n\n", VERSION, len, fstr); /* Header + a blank line */
 	logger(LOG,"Header",buffer,hit);
+	char* str = calloc(10,1);
+	sprintf( str, "%d", threadID );
+	logger(LOG,"THREAD",str,hit);
+	printf("Handled by thread %d", i);
 	dummy = write(fd,buffer,strlen(buffer));
 	
     /* Send the statistical headers described in the paper, example below
@@ -161,8 +165,8 @@ void web(int fd, int hit)
 		dummy = write(fd,buffer,ret);
 	}
 	sleep(1);	/* allow socket to drain before signalling the socket is closed */
-	free(buffer);
 	close(fd);
+	free(buffer);
 
 }
 
@@ -177,32 +181,35 @@ struct job dequeJob(){
 		queue1.size--;
 	}
     pthread_mutex_unlock(&pthread_mutex);
-	struct job x = {sock, hit};
+	struct job x = {};
+	x.socketfd = sock;
+	x.hit = hit;
 	return x;
 }
 /**
- * just an empty functions for making threads for the pool.
+ * Threads wait here to collect work for PQ.
  */
-void waitForJobs(){
+void waitForJobs(int i){
     while(1){
     	struct job x = dequeJob();
     	if(x.hit != -1){
-			web(x.socketfd, x.hit);
+			(void)printf("THREAD %d HANDLING DIS SHIT", i);
+			web(x.socketfd, x.hit, i);
     	} else{
-    	    //Out of jobs
+    	    //Add Condition Variable here
     	}
     }
 }
 
 /**
  * Builds out our Thread Pool
- * @param pool
- * @param sizeOfPool
+ * @param pool - Array of Pthreads
+ * @param sizeOfPool - iteration count
  */
 void buildThreadPool(pthread_t *pool, int sizeOfPool){
     int status, i;
     for(i = 0; i<sizeOfPool; i++){
-        status = pthread_create(&pool[i], NULL, waitForJobs, NULL);
+        status = pthread_create(&pool[i], NULL, waitForJobs, (void*) i);
         if(status != 0){
             printf("ERROR: MAKING THREAD POOL");
             exit(0);
@@ -218,6 +225,9 @@ void enqueJob(struct job *job){
 		queue1.jobs[queue1.tail].socketfd = job->socketfd;
 		queue1.tail = (queue1.tail+1) % queue1.maxSize;
 		queue1.size++;
+		if(queue1.size == 1){
+
+		}
 	}
     pthread_mutex_unlock(&pthread_mutex);
 }
