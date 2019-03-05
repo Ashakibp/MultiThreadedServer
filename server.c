@@ -7,7 +7,6 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <string.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
@@ -20,11 +19,13 @@
 #include <semaphore.h>
 
 
-//pthread_cond_t qu_empty_cond = PTHREAD_COND_INITIALIZER;
-//pthread_cond_t qu_full_cond = PTHREAD_COND_INITIALIZER;
-//pthread_mutex_t qu_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t pthread_mutex= PTHREAD_MUTEX_INITIALIZER;
-//sem_t mutex;
+pthread_cond_t qu_empty_cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t qu_full_cond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t qu_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+
+
+sem_t mutex;
 
 
 struct {
@@ -82,15 +83,11 @@ void logger(int type, char *s1, char *s2, int socket_fd)
 	}	
 	/* No checks here, nothing can be done with a failure anyway */
 	if((fd = open("nweb.log", O_CREAT| O_WRONLY | O_APPEND,0644)) >= 0) {
-		dummy = write(fd,logbuffer,strlen(logbuffer));
-//		char* buffer = calloc(100,1);
-//		sprintf(buffer, "\n handled by thread %d \n", pthread_self());
-//		dummy = write(fd,buffer,strlen(buffer));
-//		free(buffer);
-		dummy = write(fd,"\n",1);
+		dummy = write(fd,logbuffer,strlen(logbuffer)); 
+		dummy = write(fd,"\n",1);      
 		(void)close(fd);
 	}
-	if(type == ERROR || type == NOTFOUND || type == FORBIDDEN);
+	if(type == ERROR || type == NOTFOUND || type == FORBIDDEN) exit(3);
 }
 
 /* this is a child web server process, so we can exit on errors */
@@ -169,14 +166,14 @@ void web(int fd, int hit)
 struct job dequeJob(){
 	int sock = -1;
 	int hit = -1;
-    pthread_mutex_lock(&pthread_mutex);
+	sem_wait(&mutex);
 	if(queue1.size){
 		hit = queue1.jobs[queue1.head].hit;
 		sock = queue1.jobs[queue1.head].socketfd;
 		queue1.head = (queue1.head+1) % queue1.maxSize;
 		queue1.size--;
 	}
-    pthread_mutex_unlock(&pthread_mutex);
+	sem_post(&mutex);
 	struct job x = {sock, hit};
 	return x;
 }
@@ -188,8 +185,6 @@ void waitForJobs(){
     	struct job x = dequeJob();
     	if(x.hit != -1){
 			web(x.socketfd, x.hit);
-    	} else{
-    	    //Out of jobs
     	}
     }
 }
@@ -212,22 +207,21 @@ void buildThreadPool(pthread_t *pool, int sizeOfPool){
 
 void enqueJob(struct job *job){
 
-    pthread_mutex_lock(&pthread_mutex);
+	sem_wait(&mutex);
 	if(queue1.size != queue1.maxSize){
 		queue1.jobs[queue1.tail].hit = job->hit;
 		queue1.jobs[queue1.tail].socketfd = job->socketfd;
 		queue1.tail = (queue1.tail+1) % queue1.maxSize;
 		queue1.size++;
 	}
-    pthread_mutex_unlock(&pthread_mutex);
+	sem_post(&mutex);
 }
 
 int main(int argc, char **argv)
 {
 
-    pthread_mutex_init(&pthread_mutex, NULL);
-    pthread_mutex_unlock(&pthread_mutex);
-
+    sem_init(&mutex, 0, 1);
+    sem_wait(&mutex);
     int i, port, pid, listenfd, socketfd, hit, numOfThreads;
 	socklen_t length;
 	static struct sockaddr_in cli_addr; /* static = initialised to zeros */
@@ -306,7 +300,7 @@ int main(int argc, char **argv)
 		else {
             struct job job1 = {socketfd, hit};
             enqueJob(&job1);
-            //Wake any sleeping threads
+            sleep(1);
         }
 	}
 }
