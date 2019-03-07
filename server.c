@@ -86,7 +86,8 @@ void logger(int type, char *s1, char *s2, int socket_fd)
 	char* logbuffer = calloc(BUFSIZE*2, 1);
 
 	switch (type) {
-	case ERROR: (void)sprintf(logbuffer,"ERROR: %s:%s Errno=%d exiting pid=%d",s1, s2, errno,getpid()); 
+	case ERROR: (void)sprintf(logbuffer,"ERROR: %s:%s Errno=%d exiting pid=%d",s1, s2, errno,getpid());
+            close(socket_fd);
 		break;
 	case FORBIDDEN: 
 		dummy = write(socket_fd, "HTTP/1.1 403 Forbidden\nContent-Length: 185\nConnection: close\nContent-Type: text/html\n\n<html><head>\n<title>403 Forbidden</title>\n</head><body>\n<h1>Forbidden</h1>\nThe requested URL, file type or operation is not allowed on this simple static file webserver.\n</body></html>\n",271);
@@ -110,6 +111,7 @@ void logger(int type, char *s1, char *s2, int socket_fd)
 		dummy = write(fd,"\n",1);
 		(void)close(fd);
 	}
+	free(logbuffer);
 //	if(type == ERROR || type == NOTFOUND || type == FORBIDDEN);
 }
 struct job* web1(int fd, int hit, int threadID){
@@ -124,6 +126,7 @@ struct job* web1(int fd, int hit, int threadID){
 	ret =read(fd,buffer,BUFSIZE); 	/* read Web request in one go */
 	if(ret == 0 || ret == -1) {	/* read failure stop now */
 		logger(FORBIDDEN,"failed to read browser request","",fd);
+		free(buffer);
 		return NULL;
 	}
 	if(ret > 0 && ret < BUFSIZE)	/* return code is valid chars */
@@ -135,6 +138,7 @@ struct job* web1(int fd, int hit, int threadID){
 	logger(LOG,"request",buffer,hit);
 	if( strncmp(buffer,"GET ",4) && strncmp(buffer,"get ",4) ) {
 		logger(FORBIDDEN,"Only simple GET operation supported",buffer,fd);
+		free(buffer);
 		return NULL;
 	}
 	for(i=4;i<BUFSIZE;i++) { /* null terminate after the second space to ignore extra stuff */
@@ -329,6 +333,9 @@ struct job* dequeJob(){
 		sock = highPQ.jobs[highPQ.head].socketfd;
 		isImage = highPQ.jobs[highPQ.head].isImage;
         jawb->buffer = highPQ.jobs[highPQ.head].buffer;
+        if(jawb->buffer == NULL){
+            hit;
+        }
         highPQ.jobs[highPQ.head].buffer = NULL;
 		highPQ.head = (highPQ.head+1) % highPQ.maxSize;
         highPQ.size-=1;
@@ -337,6 +344,9 @@ struct job* dequeJob(){
 			sock = lowPQ.jobs[lowPQ.head].socketfd;
 			isImage = lowPQ.jobs[lowPQ.head].isImage;
             jawb->buffer = lowPQ.jobs[lowPQ.head].buffer;
+            if(jawb->buffer == NULL){
+                hit;
+            }
             lowPQ.jobs[lowPQ.head].buffer = NULL;
 			lowPQ.head = (lowPQ.head+1) % lowPQ.maxSize;
 			lowPQ.size--;
@@ -548,7 +558,13 @@ int main(int argc, char **argv)
 		}
 		else {
 			 struct job* jawb = web1(socketfd,hit,-1);
-             enqueJob(jawb);
+            if(jawb != NULL && jawb->buffer == NULL){
+                hit;
+            }
+			 if(jawb != NULL) {
+                 enqueJob(jawb);
+             }
+			 free(jawb);
 //            wait(10000);//flush
             //Wake any sleeping threads
         }
