@@ -24,9 +24,10 @@
 //pthread_cond_t qu_full_cond = PTHREAD_COND_INITIALIZER;
 //pthread_mutex_t qu_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t highPriorityMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t lowPriorityMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t dispatchCountMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t completeCountMutex = PTHREAD_MUTEX_INITIALIZER;
 //sem_t mutex;
-
+clock_t before;
 
 struct {
     char *ext;
@@ -50,6 +51,8 @@ struct job{
     int hit;
     int isImage;
     char* buffer;
+    int dispatchCount;
+    clock_t arrivalTime;
 };
 
 
@@ -68,6 +71,8 @@ struct queue2{
     int size;
     int maxSize;
 } lowPQ;
+int dispatchCount = 0;
+int completeCount = 0;
 
 int policy;
 /**
@@ -80,6 +85,31 @@ int policy;
 
 static int dummy; //keep compiler happy
 
+int incrementDispatchCount(){
+    int dispatched = 0;
+    pthread_mutex_lock(&dispatchCountMutex);
+    dispatched = dispatchCount;
+    dispatchCount++;
+    pthread_mutex_unlock(&dispatchCountMutex);
+    return dispatched;
+}
+
+int incrementCompleteCount(){
+    int dispatched = 0;
+    pthread_mutex_lock(&completeCountMutex);
+    dispatched = dispatchCount;
+    dispatchCount++;
+    pthread_mutex_unlock(&completeCountMutex);
+    return dispatched;
+}
+
+int getDispatch(){
+    int dispatched = 0;
+    pthread_mutex_lock(&dispatchCountMutex);
+    dispatched = dispatchCount;
+    pthread_mutex_unlock(&dispatchCountMutex);
+    return dispatched;
+}
 void logger(int type, char *s1, char *s2, int socket_fd)
 {
     int fd ;
@@ -118,7 +148,7 @@ struct job* web1(int fd, int hit, int threadID){
     struct job* jawb = calloc(1,sizeof(struct job));
     jawb->socketfd = fd;
     jawb->hit = hit;
-    int j, file_fd, buflen;
+    int j, buflen;
     long i, ret, len;
     char * fstr;
     char* buffer = calloc(BUFSIZE+1, 1); /* calloc so zero filled and shared amongst threads*/
@@ -176,7 +206,7 @@ struct job* web1(int fd, int hit, int threadID){
         logger(FORBIDDEN,"file extension type not supported",buffer,fd);
         return NULL;
     }
-
+    jawb->arrivalTime = clock() - before;
     return jawb;
 }
 void web2(struct job JAWB, int threadID){
@@ -206,7 +236,8 @@ void web2(struct job JAWB, int threadID){
     logger(LOG,"SEND",&buffer[5],hit);
     len = (long)lseek(file_fd, (off_t)0, SEEK_END); /* lseek to the file end to find the length */
     (void)lseek(file_fd, (off_t)0, SEEK_SET); /* lseek back to the file start ready for reading */
-    (void)sprintf(buffer,"HTTP/1.1 200 OK\nServer: nweb/%d.0\nContent-Length: %ld\nConnection: close\nContent-Type: %s\n\n", VERSION, len, fstr); /* Header + a blank line */
+    int dispatchAge =  getDispatch() - JAWB.dispatchCount;
+    (void)sprintf(buffer,"HTTP/1.1 200 OK\nServer: nweb/%d.0\nContent-Length: %ld\nConnection: close\nContent-Type: %s\nX-stat-req-arrival-count: %d\nX-stat-req-arrival-time: %d\nX-stat-req-dispatch-count: %d\nX-stat-req-complete-count: %d\nX-stat-req-complete-time: %d\nX-stat-req-age: %d\n\n", VERSION, len, fstr, hit, JAWB.arrivalTime,JAWB.dispatchCount, incrementCompleteCount(), clock(), dispatchAge); /* Header + a blank line */
     logger(LOG,"Header",buffer,hit);
     char* str = calloc(10,1);
     sprintf( str, "%d", threadID );
@@ -228,91 +259,91 @@ void web2(struct job JAWB, int threadID){
     close(fd);
 }
 
-/**
- * We need to break this into to functions. a read and a return.
- * @param fd - Socket
- * @param hit - Request #
- * @param threadID - If you dont understand this, find a new major.
- */
-void web(int fd, int hit, int threadID)
-{
-    int j, file_fd, buflen;
-    long i, ret, len;
-    char * fstr;
-    char* buffer = calloc(BUFSIZE+1, 1); /* calloc so zero filled and shared amongst threads*/
-    ret = read(fd,buffer,BUFSIZE); 	/* read Web request in one go */
-    if(ret == 0 || ret == -1) {	/* read failure stop now */
-        logger(FORBIDDEN,"failed to read browser request","",fd);
-    }
-    if(ret > 0 && ret < BUFSIZE)	/* return code is valid chars */
-        buffer[ret]=0;		/* terminate the buffer */
-    else buffer[0]=0;
-    for(i=0;i<ret;i++)	/* remove CF and LF characters */
-        if(buffer[i] == '\r' || buffer[i] == '\n')
-            buffer[i]='*';
-    logger(LOG,"request",buffer,hit);
-    if( strncmp(buffer,"GET ",4) && strncmp(buffer,"get ",4) ) {
-        logger(FORBIDDEN,"Only simple GET operation supported",buffer,fd);
-    }
-    for(i=4;i<BUFSIZE;i++) { /* null terminate after the second space to ignore extra stuff */
-        if(buffer[i] == ' ') { /* string is "GET URL " +lots of other stuff */
-            buffer[i] = 0;
-            break;
-        }
-    }
-    for(j=0;j<i-1;j++) 	/* check for illegal parent directory use .. */
-        if(buffer[j] == '.' && buffer[j+1] == '.') {
-            logger(FORBIDDEN,"Parent directory (..) path names not supported",buffer,fd);
-            return;
-        }
-    if( !strncmp(&buffer[0],"GET /\0",6) || !strncmp(&buffer[0],"get /\0",6) ) /* convert no filename to index file */
-        (void)strcpy(buffer,"GET /index.html");
-
-    /* work out the file type and check we support it */
-    buflen=strlen(buffer);
-    fstr = (char *)0;
-    for(i=0;extensions[i].ext != 0;i++) {
-        len = strlen(extensions[i].ext);
-        if( !strncmp(&buffer[buflen-len], extensions[i].ext, len)) {
-            fstr =extensions[i].filetype;
-            break;
-        }
-    }
-    if(fstr == 0){
-        logger(FORBIDDEN,"file extension type not supported",buffer,fd);
-        return;
-    }
-
-    if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) {  /* open the file for reading */
-        logger(NOTFOUND, "failed to open file",&buffer[5],fd);
-        return;
-    }
-    logger(LOG,"SEND",&buffer[5],hit);
-    len = (long)lseek(file_fd, (off_t)0, SEEK_END); /* lseek to the file end to find the length */
-    (void)lseek(file_fd, (off_t)0, SEEK_SET); /* lseek back to the file start ready for reading */
-    (void)sprintf(buffer,"HTTP/1.1 200 OK\nServer: nweb/%d.0\nContent-Length: %ld\nConnection: close\nContent-Type: %s\n\n", VERSION, len, fstr); /* Header + a blank line */
-    logger(LOG,"Header",buffer,hit);
-    char* str = calloc(10,1);
-    sprintf( str, "%d", threadID );
-    logger(LOG,"Handled By Thread: ",str,fd);
-    free(str);
-    dummy = write(fd,buffer,strlen(buffer));
-
-    /* Send the statistical headers described in the paper, example below
-
-    (void)sprintf(buffer,"X-stat-req-arrival-count: %d\r\n", xStatReqArrivalCount);
-	dummy = write(fd,buffer,strlen(buffer));
-    */
-
-    /* send file in 8KB block - last block may be smaller */
-    while (	(ret = read(file_fd, buffer, BUFSIZE)) > 0 ) {
-        dummy = write(fd,buffer,ret);
-    }
-    sleep(1);	/* allow socket to drain before signalling the socket is closed */
-    close(fd);
-    free(buffer);
-
-}
+///**
+// * We need to break this into to functions. a read and a return.
+// * @param fd - Socket
+// * @param hit - Request #
+// * @param threadID - If you dont understand this, find a new major.
+// */
+//void web(int fd, int hit, int threadID)
+//{
+//    int j, file_fd, buflen;
+//    long i, ret, len;
+//    char * fstr;
+//    char* buffer = calloc(BUFSIZE+1, 1); /* calloc so zero filled and shared amongst threads*/
+//    ret = read(fd,buffer,BUFSIZE); 	/* read Web request in one go */
+//    if(ret == 0 || ret == -1) {	/* read failure stop now */
+//        logger(FORBIDDEN,"failed to read browser request","",fd);
+//    }
+//    if(ret > 0 && ret < BUFSIZE)	/* return code is valid chars */
+//        buffer[ret]=0;		/* terminate the buffer */
+//    else buffer[0]=0;
+//    for(i=0;i<ret;i++)	/* remove CF and LF characters */
+//        if(buffer[i] == '\r' || buffer[i] == '\n')
+//            buffer[i]='*';
+//    logger(LOG,"request",buffer,hit);
+//    if( strncmp(buffer,"GET ",4) && strncmp(buffer,"get ",4) ) {
+//        logger(FORBIDDEN,"Only simple GET operation supported",buffer,fd);
+//    }
+//    for(i=4;i<BUFSIZE;i++) { /* null terminate after the second space to ignore extra stuff */
+//        if(buffer[i] == ' ') { /* string is "GET URL " +lots of other stuff */
+//            buffer[i] = 0;
+//            break;
+//        }
+//    }
+//    for(j=0;j<i-1;j++) 	/* check for illegal parent directory use .. */
+//        if(buffer[j] == '.' && buffer[j+1] == '.') {
+//            logger(FORBIDDEN,"Parent directory (..) path names not supported",buffer,fd);
+//            return;
+//        }
+//    if( !strncmp(&buffer[0],"GET /\0",6) || !strncmp(&buffer[0],"get /\0",6) ) /* convert no filename to index file */
+//        (void)strcpy(buffer,"GET /index.html");
+//
+//    /* work out the file type and check we support it */
+//    buflen=strlen(buffer);
+//    fstr = (char *)0;
+//    for(i=0;extensions[i].ext != 0;i++) {
+//        len = strlen(extensions[i].ext);
+//        if( !strncmp(&buffer[buflen-len], extensions[i].ext, len)) {
+//            fstr =extensions[i].filetype;
+//            break;
+//        }
+//    }
+//    if(fstr == 0){
+//        logger(FORBIDDEN,"file extension type not supported",buffer,fd);
+//        return;
+//    }
+//
+//    if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) {  /* open the file for reading */
+//        logger(NOTFOUND, "failed to open file",&buffer[5],fd);
+//        return;
+//    }
+//    logger(LOG,"SEND",&buffer[5],hit);
+//    len = (long)lseek(file_fd, (off_t)0, SEEK_END); /* lseek to the file end to find the length */
+//    (void)lseek(file_fd, (off_t)0, SEEK_SET); /* lseek back to the file start ready for reading */
+//    (void)sprintf(buffer,"HTTP/1.1 200 OK\nServer: nweb/%d.0\nContent-Length: %ld\nConnection: close\nContent-Type: %s\n\n", VERSION, len, fstr); /* Header + a blank line */
+//    logger(LOG,"Header",buffer,hit);
+//    char* str = calloc(10,1);
+//    sprintf( str, "%d", threadID );
+//    logger(LOG,"Handled By Thread: ",str,fd);
+//    free(str);
+//    dummy = write(fd,buffer,strlen(buffer));
+//
+//    /* Send the statistical headers described in the paper, example below
+//
+//    (void)sprintf(buffer,"X-stat-req-arrival-count: %d\r\n", xStatReqArrivalCount);
+//	dummy = write(fd,buffer,strlen(buffer));
+//    */
+//
+//    /* send file in 8KB block - last block may be smaller */
+//    while (	(ret = read(file_fd, buffer, BUFSIZE)) > 0 ) {
+//        dummy = write(fd,buffer,ret);
+//    }
+//    sleep(1);	/* allow socket to drain before signalling the socket is closed */
+//    close(fd);
+//    free(buffer);
+//
+//}
 
 
 //todo: Yudi is going to do remove from the queue here, keep in mind - this is a MAX priority queue
@@ -320,21 +351,19 @@ void web(int fd, int hit, int threadID)
  * This is to remove from queue here
  * @return
  */
-struct job* dequeJob(){
+struct job dequeJob(){
     int sock = -1;
     int hit = -1;
     int isImage = -1;
-    struct job *jawb = (struct job*) calloc(1, sizeof(jawb));
-    char* buf = jawb->buffer;
+    clock_t arrivalTime = clock();
+    struct job jawb = {};
     pthread_mutex_lock(&highPriorityMutex);
     if(highPQ.size > 0){
         hit = highPQ.jobs[highPQ.head].hit;
+        arrivalTime = highPQ.jobs[highPQ.head].arrivalTime;
         sock = highPQ.jobs[highPQ.head].socketfd;
         isImage = highPQ.jobs[highPQ.head].isImage;
-        jawb->buffer = highPQ.jobs[highPQ.head].buffer;
-        if(jawb->buffer == NULL){
-            hit;
-        }
+        jawb.buffer = highPQ.jobs[highPQ.head].buffer;
         highPQ.jobs[highPQ.head].buffer = NULL;
         highPQ.head = (highPQ.head+1) % highPQ.maxSize;
         highPQ.size-=1;
@@ -342,18 +371,20 @@ struct job* dequeJob(){
         hit = lowPQ.jobs[lowPQ.head].hit;
         sock = lowPQ.jobs[lowPQ.head].socketfd;
         isImage = lowPQ.jobs[lowPQ.head].isImage;
-        jawb->buffer = lowPQ.jobs[lowPQ.head].buffer;
-        if(jawb->buffer == NULL){
-            hit;
-        }
+        arrivalTime = lowPQ.jobs[lowPQ.head].arrivalTime;
+        jawb.buffer = lowPQ.jobs[lowPQ.head].buffer;
         lowPQ.jobs[lowPQ.head].buffer = NULL;
         lowPQ.head = (lowPQ.head+1) % lowPQ.maxSize;
         lowPQ.size--;
     }
     pthread_mutex_unlock(&highPriorityMutex);
-    jawb->hit = hit;
-    jawb->socketfd = sock;
-    jawb->isImage = isImage;
+    jawb.hit = hit;
+    jawb.socketfd = sock;
+    jawb.arrivalTime = arrivalTime;
+    jawb.isImage = isImage;
+    if(hit != -1) {
+        jawb.dispatchCount = incrementDispatchCount();
+    }
     return jawb;
 }
 /**
@@ -361,10 +392,10 @@ struct job* dequeJob(){
  */
 void waitForJobs(int i){
     while(1){
-        struct job* x = dequeJob();
-        if(x->hit != -1){
-            web2(*x, i);
-            x->hit = -1;
+        struct job x = dequeJob();
+        if(x.hit != -1){
+            web2(x, i);
+            x.hit = -1;
         } else{
             //
         }
@@ -379,7 +410,9 @@ void waitForJobs(int i){
 void buildThreadPool(pthread_t *pool, int sizeOfPool){
     int status, i;
     for(i = 0; i<sizeOfPool; i++){
-        status = pthread_create(&pool[i], NULL, waitForJobs, (void*) i);
+        int *x;
+        x = &i;
+        status = pthread_create(&pool[i], NULL,(void *) waitForJobs, (int*) x);
         if(status != 0){
             printf("ERROR: MAKING THREAD POOL");
             exit(0);
@@ -394,6 +427,7 @@ void highPriorityEnque(struct job *job){
     if(highPQ.size != highPQ.maxSize){
         highPQ.jobs[highPQ.tail].hit = job->hit;
         highPQ.jobs[highPQ.tail].socketfd = job->socketfd;
+        highPQ.jobs[highPQ.tail].arrivalTime = job->arrivalTime;
         highPQ.jobs[highPQ.tail].buffer = job->buffer;
         highPQ.tail = (highPQ.tail+1) % highPQ.maxSize;
         highPQ.size++;
@@ -408,6 +442,7 @@ void lowPriorityEnque(struct job *job){
     if(lowPQ.size != lowPQ.maxSize){
         lowPQ.jobs[lowPQ.tail].hit = job->hit;
         lowPQ.jobs[lowPQ.tail].socketfd = job->socketfd;
+        lowPQ.jobs[lowPQ.tail].arrivalTime = job->arrivalTime;
         lowPQ.jobs[lowPQ.tail].buffer = job->buffer;
         lowPQ.tail = (lowPQ.tail+1) % lowPQ.maxSize;
         lowPQ.size++;
@@ -447,12 +482,12 @@ void enqueJob(struct job *job){
 
 int main(int argc, char **argv)
 {
-    char* x = malloc(1000000);
-    free(x);
+    before = clock();
     pthread_mutex_init(&highPriorityMutex, NULL);
-    pthread_mutex_init(&lowPriorityMutex, NULL);
+    pthread_mutex_init(&dispatchCountMutex, NULL);
+    pthread_mutex_init(&completeCountMutex, NULL);
     pthread_mutex_lock(&highPriorityMutex);
-    pthread_mutex_lock(&lowPriorityMutex);
+    pthread_mutex_lock(&dispatchCountMutex);
     int i, port, listenfd, socketfd, hit, numOfThreads;
     socklen_t length;
     static struct sockaddr_in cli_addr; /* static = initialised to zeros */
@@ -527,7 +562,7 @@ int main(int argc, char **argv)
     lowPQ.size = 0;
     lowPQ.jobs = (struct job*) calloc(bufferSize,sizeof(struct job));
     pthread_mutex_unlock(&highPriorityMutex);
-    pthread_mutex_unlock(&lowPriorityMutex);
+    pthread_mutex_unlock(&dispatchCountMutex);
     /* Become deamon + unstopable and no zombies children (= no wait()) */
 //	if(fork() != 0)//We add code here
 //		return 0; /* parent returns OK to shell */
@@ -559,9 +594,8 @@ int main(int argc, char **argv)
         else {
             struct job* jawb = web1(socketfd,hit,-1);
             if(jawb != NULL && jawb->buffer == NULL){
-                hit;
             }
-            if(jawb != NULL) {
+            else if(jawb != NULL) {
                 enqueJob(jawb);
             }
             free(jawb);
@@ -570,3 +604,14 @@ int main(int argc, char **argv)
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+

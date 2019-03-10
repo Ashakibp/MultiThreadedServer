@@ -24,7 +24,7 @@
 //pthread_cond_t qu_full_cond = PTHREAD_COND_INITIALIZER;
 //pthread_mutex_t qu_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t highPriorityMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t lowPriorityMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t dispatchCountMutex = PTHREAD_MUTEX_INITIALIZER;
 //sem_t mutex;
 
 
@@ -450,9 +450,9 @@ int main(int argc, char **argv)
 {
 
     pthread_mutex_init(&highPriorityMutex, NULL);
-    pthread_mutex_init(&lowPriorityMutex, NULL);
+    pthread_mutex_init(&dispatchCountMutex, NULL);
     pthread_mutex_lock(&highPriorityMutex);
-    pthread_mutex_lock(&lowPriorityMutex);
+    pthread_mutex_lock(&dispatchCountMutex);
 	int i, port, listenfd, socketfd, hit, numOfThreads;
 	socklen_t length;
 	static struct sockaddr_in cli_addr; /* static = initialised to zeros */
@@ -527,7 +527,7 @@ int main(int argc, char **argv)
     lowPQ.size = 0;
     lowPQ.jobs = (struct job*) calloc(bufferSize,sizeof(struct job));
     pthread_mutex_unlock(&highPriorityMutex);
-    pthread_mutex_unlock(&lowPriorityMutex);
+    pthread_mutex_unlock(&dispatchCountMutex);
 	/* Become deamon + unstopable and no zombies children (= no wait()) */
 //	if(fork() != 0)//We add code here
 //		return 0; /* parent returns OK to shell */
