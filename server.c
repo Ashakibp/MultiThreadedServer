@@ -447,7 +447,8 @@ void enqueJob(struct job *job){
 
 int main(int argc, char **argv)
 {
-
+    char* x = malloc(1000000);
+    free(x);
     pthread_mutex_init(&highPriorityMutex, NULL);
     pthread_mutex_init(&lowPriorityMutex, NULL);
     pthread_mutex_lock(&highPriorityMutex);
