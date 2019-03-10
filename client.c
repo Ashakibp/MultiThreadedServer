@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
   Schedalg = argv[4];
   Filename1 = argv[5];
 
-  pthread_t threads = calloc(numOfThreads, sizeof(pthread_t));
+  pthread_t *threads = calloc(numOfThreads, sizeof(pthread_t));
   int status, i;
   //concurent scheduling?
   if(strcmp(Schedalg,"Concur")==0) {
