@@ -516,10 +516,10 @@ int main(int argc, char **argv)
     lowPQ.tail = 0;
     lowPQ.size = 0;
     lowPQ.jobs = (struct job*) calloc(bufferSize,sizeof(struct job));
-    pthread_mutex_unlock(&highPriorityMutex);
+    pthread__unlock(&highPriorityMutex);
     pthread_mutex_unlock(&lowPriorityMutex);
 	/* Become deamon + unstopable and no zombies children (= no wait()) */
-//	if(fork() != 0)//We add code here
+//	if(fomutexrk() != 0)//We add code here
 //		return 0; /* parent returns OK to shell */
 	(void)signal(SIGCHLD, SIG_IGN); /* ignore child death */
 	(void)signal(SIGHUP, SIG_IGN); /* ignore terminal hangups */

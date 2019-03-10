@@ -5,6 +5,10 @@
 #include <string.h>
 #include <unistd.h>
 
+/*utility */
+#include <semaphore.h>
+#include <sched.h>
+
 /* Network */
 #include <netdb.h>
 #include <sys/socket.h>
@@ -20,6 +24,14 @@ int numOfThreads;
 char* Schedalg;//implement soon
 char* Filename1;
 char* Filename2;// implement soon
+
+//for CONCUR Schedule
+pthread_barrier_t barrier;
+
+//for FIFO schedule
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+int turn = 0;
 
 // Get host information (used to establishConnection)
 struct addrinfo *getHostInfo(char* host, char* port) {
@@ -70,9 +82,54 @@ void GET(int clientfd, char *path) {
   sprintf(req, "GET %s HTTP/1.0\r\n\r\n", path);
   send(clientfd, req, strlen(req), 0);
 }
-void doThreadJob(){
+void doThreadJobConcur(int i){
     char* buf = calloc(BUF_SIZE,1);
     while(1){
+
+        int clientfd;
+        // Establish connection with <hostname>:<port>
+        clientfd = establishConnection(getHostInfo(Host, Portnum));
+        if (clientfd == -1) {
+            fprintf(stderr,
+                    "[main:73] Failed to connect to: %s:%s%s \n",
+                    Host, Portnum, Filename1);
+
+        }
+
+            // Send GET request > stdout
+            printf("\n");
+            printf("THREAD ID: %d\n", i);
+            printf("***** ****** ***** *********** ****** ***** ****** ***** ****** ***** ******\n");
+            //send req
+            GET(clientfd, Filename1);
+
+            //receive response
+            while (recv(clientfd, buf, BUF_SIZE, 0) > 0) {
+                fputs(buf, stdout);
+                memset(buf, 0, BUF_SIZE);
+            }
+            printf("***** ****** ***** *********** ****** ***** ****** ***** ****** ***** ******\n");
+            printf("\n");
+
+            close(clientfd);
+            //all threads wait for all other threads to finish before sending new requests
+            pthread_barrier_wait(&barrier);
+
+
+    }
+
+}
+void doThreadJobFifo(int i){
+    char* buf = calloc(BUF_SIZE,1);
+    while(1) {
+        //is it this threads turn
+        while (!(turn == i)) {
+            pthread_cond_timedwait(&cond, &mutex,3);
+        }
+        //printf("turn = %d, thread= %d\n",turn,i);
+        pthread_mutex_lock(&mutex);
+        //pthread_cond_wait(&cond, &mutex);
+        //printf("Its's Thread %d turn\n", i);
         int clientfd;
         // Establish connection with <hostname>:<port>
         clientfd = establishConnection(getHostInfo(Host, Portnum));
@@ -84,20 +141,38 @@ void doThreadJob(){
         }
 
         // Send GET request > stdout
-
+        printf("\n");
+        printf("THREAD ID: %d\n", i);
+        printf("***** ****** ***** *********** ****** ***** ****** ***** ****** ***** ******\n");
+        //send req
         GET(clientfd, Filename1);
+        if(turn == numOfThreads - 1){
+            turn =0;
+        }
+        else{
+            turn++;
+        }
+        pthread_mutex_unlock(&mutex);
+        pthread_cond_signal(&cond);
+
+        //receive response
         while (recv(clientfd, buf, BUF_SIZE, 0) > 0) {
             fputs(buf, stdout);
             memset(buf, 0, BUF_SIZE);
         }
+        printf("***** ****** ***** *********** ****** ***** ****** ***** ****** ***** ******\n");
+        printf("\n");
 
         close(clientfd);
+
+        //wait for all threads to receive their response
+        pthread_barrier_wait(&barrier);
     }
 }
 
 
 int main(int argc, char **argv) {
-  if (argc != 5) {
+  if (argc != 6) {
     fprintf(stderr, "USAGE: ./httpclient <hostname> <port> <request path>\n");
     return 1;
   }
@@ -106,20 +181,41 @@ int main(int argc, char **argv) {
   Host = argv[1];
   Portnum = argv[2];
   numOfThreads = atoi(argv[3]);
-  Filename1 = argv[4];
+  Schedalg = argv[4];
+  Filename1 = argv[5];
 
   pthread_t threads = calloc(numOfThreads, sizeof(pthread_t));
   int status, i;
-    for(i = 0; i<numOfThreads; i++){
-        status = pthread_create(&threads[i], NULL, doThreadJob ,NULL);
-        if(status != 0){
-            printf("ERROR: MAKING THREAD POOL");
-            exit(0);
-        }
-    }
+  //concurent scheduling?
+  if(strcmp(Schedalg,"Concur")==0) {
+
+      pthread_barrier_init(&barrier,NULL,numOfThreads);
+
+      for (i = 0; i < numOfThreads; i++) {
+          status = pthread_create(&threads[i], NULL, doThreadJobConcur, (void *) i);
+          if (status != 0) {
+              printf("ERROR: MAKING THREAD POOL");
+              exit(0);
+          }
+      }
+    //FIFO scheduling?
+  } else if(strcmp(Schedalg,"FIFO")==0){
+
+      pthread_cond_init(&cond,NULL);
+      pthread_mutex_init(&mutex,NULL);
+      pthread_barrier_init(&barrier,NULL,numOfThreads);
+      for (i = 0; i < numOfThreads; i++) {
+              status = pthread_create(&threads[i], NULL, doThreadJobFifo, (void *) i);
+              if (status != 0) {
+                  printf("ERROR: MAKING THREAD POOL");
+                  exit(0);
+              }
+          }
+  }
+
     /* END BUILD THREADPOOL*/
 
 
-doThreadJob();
-  return 0;
+pthread_exit(NULL);
+
 }
