@@ -26,6 +26,8 @@
 pthread_mutex_t highPriorityMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t dispatchCountMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t completeCountMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t waitingLosers = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t waitCond;
 //sem_t mutex;
 clock_t before;
 
@@ -397,7 +399,7 @@ void waitForJobs(int i){
             web2(x, i);
             x.hit = -1;
         } else{
-            //
+            pthread_cond_wait(&waitCond,&waitingLosers);
         }
     }
 }
@@ -432,7 +434,7 @@ void highPriorityEnque(struct job *job){
         highPQ.tail = (highPQ.tail+1) % highPQ.maxSize;
         highPQ.size++;
         if(highPQ.size == 1){
-
+            pthread_cond_broadcast(&waitCond);
         }
     }
     pthread_mutex_unlock(&highPriorityMutex);
@@ -447,7 +449,7 @@ void lowPriorityEnque(struct job *job){
         lowPQ.tail = (lowPQ.tail+1) % lowPQ.maxSize;
         lowPQ.size++;
         if(lowPQ.size == 1){
-
+            pthread_cond_broadcast(&waitCond);
         }
     }
     pthread_mutex_unlock(&highPriorityMutex);
@@ -486,6 +488,8 @@ int main(int argc, char **argv)
     pthread_mutex_init(&highPriorityMutex, NULL);
     pthread_mutex_init(&dispatchCountMutex, NULL);
     pthread_mutex_init(&completeCountMutex, NULL);
+    pthread_mutex_init(&waitingLosers, NULL);
+    pthread_cond_init(&waitCond, NULL);
     pthread_mutex_lock(&highPriorityMutex);
     pthread_mutex_lock(&dispatchCountMutex);
     int i, port, listenfd, socketfd, hit, numOfThreads;

@@ -26,7 +26,7 @@ char* Filename1;
 char* Filename2;// implement soon
 
 //for CONCUR Schedule
-pthread_barrier_t barrier;
+pthread_barrier_t *barrier;
 
 //for FIFO schedule
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -186,13 +186,15 @@ int main(int argc, char **argv) {
 
   pthread_t *threads = calloc(numOfThreads, sizeof(pthread_t));
   int status, i;
+  int *x;
+  x=&i;
   //concurent scheduling?
   if(strcmp(Schedalg,"Concur")==0) {
 
       pthread_barrier_init(&barrier,NULL,numOfThreads);
 
       for (i = 0; i < numOfThreads; i++) {
-          status = pthread_create(&threads[i], NULL, doThreadJobConcur, (void *) i);
+          status = pthread_create(&threads[i], NULL, doThreadJobConcur, (int *) i);
           if (status != 0) {
               printf("ERROR: MAKING THREAD POOL");
               exit(0);
