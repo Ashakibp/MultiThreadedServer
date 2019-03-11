@@ -433,7 +433,7 @@ void highPriorityEnque(struct job *job){
         highPQ.jobs[highPQ.tail].buffer = job->buffer;
         highPQ.tail = (highPQ.tail+1) % highPQ.maxSize;
         highPQ.size++;
-        if(highPQ.size == 1){
+        if(highPQ.size >= 1){
             pthread_cond_broadcast(&waitCond);
         }
     }
@@ -448,7 +448,7 @@ void lowPriorityEnque(struct job *job){
         lowPQ.jobs[lowPQ.tail].buffer = job->buffer;
         lowPQ.tail = (lowPQ.tail+1) % lowPQ.maxSize;
         lowPQ.size++;
-        if(lowPQ.size == 1){
+        if(lowPQ.size >= 1){
             pthread_cond_broadcast(&waitCond);
         }
     }
@@ -484,6 +484,9 @@ void enqueJob(struct job *job){
 
 int main(int argc, char **argv)
 {
+    if(fork() != 0)//We add code here
+        return 0; /* parent returns OK to shell */
+
     before = clock();
     pthread_mutex_init(&highPriorityMutex, NULL);
     pthread_mutex_init(&dispatchCountMutex, NULL);
@@ -568,8 +571,6 @@ int main(int argc, char **argv)
     pthread_mutex_unlock(&highPriorityMutex);
     pthread_mutex_unlock(&dispatchCountMutex);
     /* Become deamon + unstopable and no zombies children (= no wait()) */
-//	if(fork() != 0)//We add code here
-//		return 0; /* parent returns OK to shell */
     (void)signal(SIGCHLD, SIG_IGN); /* ignore child death */
     (void)signal(SIGHUP, SIG_IGN); /* ignore terminal hangups */
     for(i=0;i<32;i++)
