@@ -240,7 +240,7 @@ void web2(struct job JAWB, int threadID){
     len = (long)lseek(file_fd, (off_t)0, SEEK_END); /* lseek to the file end to find the length */
     (void)lseek(file_fd, (off_t)0, SEEK_SET); /* lseek back to the file start ready for reading */
     int dispatchAge =  getDispatch() - JAWB.dispatchCount;
-    (void)sprintf(buffer,"HTTP/1.1 200 OK\nServer: nweb/%d.0\nContent-Length: %ld\nConnection: close\nContent-Type: %s\nX-stat-req-arrival-count: %d\nX-stat-req-arrival-time: %d\nX-stat-req-dispatch-count: %d\nX-stat-req-complete-count: %d\nX-stat-req-complete-time: %d\nX-stat-req-age: %d\n\n", VERSION, len, fstr, hit, JAWB.arrivalTime,JAWB.dispatchCount, incrementCompleteCount(), clock(), dispatchAge); /* Header + a blank line */
+    (void)sprintf(buffer,"HTTP/1.1 200 OK\nServer: nweb/%d.0\nContent-Length: %ld\nConnection: close\nContent-Type: %s\nX-stat-req-arrival-count: %d\nX-stat-req-arrival-time: %ld\nX-stat-req-dispatch-count: %d\nX-stat-req-complete-count: %d\nX-stat-req-complete-time: %ld\nX-stat-req-age: %d\n\n", VERSION, len, fstr, hit, JAWB.arrivalTime,JAWB.dispatchCount, incrementCompleteCount(), clock(), dispatchAge); /* Header + a blank line */
     logger(LOG,"Header",buffer,hit);
     char* str = calloc(10,1);
     sprintf( str, "%d", threadID );
@@ -359,7 +359,9 @@ struct job dequeJob(){
     int hit = -1;
     int isImage = -1;
     clock_t arrivalTime = clock();
-    struct job jawb = {};
+    struct job jawb = {
+            0,0,0,NULL,0,0
+    };
     pthread_mutex_lock(&highPriorityMutex);
     if(highPQ.size > 0){
         hit = highPQ.jobs[highPQ.head].hit;
@@ -415,7 +417,7 @@ void buildThreadPool(pthread_t *pool, int sizeOfPool){
     for(i = 0; i<sizeOfPool; i++){
         int *x;
         x = &i;
-        status = pthread_create(&pool[i], NULL,(void *) waitForJobs, (int*) x);
+        status = pthread_create(&pool[i], NULL, (void *(*)(void *)) waitForJobs, (int*) x);
         if(status != 0){
             printf("ERROR: MAKING THREAD POOL");
             exit(0);
