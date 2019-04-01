@@ -1,4 +1,4 @@
-C:\Users\yudi\.CLion2018.2\system\cygwin_cmake\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" "/cygdrive/c/Users/yudi/OneDrive/Documents/Yeshiva University Documents/Spring 2019/Operating_Systems/MultiThreadedServer"
+/Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/Library/Developer/CommandLineTools/usr/bin/gcc -G "CodeBlocks - Unix Makefiles" /Users/yudi/CLionProjects/MultiThreadedServer
 -- Configuring done
 -- Generating done
--- Build files have been written to: /cygdrive/c/Users/yudi/OneDrive/Documents/Yeshiva University Documents/Spring 2019/Operating_Systems/MultiThreadedServer/cmake-build-debug
+-- Build files have been written to: /Users/yudi/CLionProjects/MultiThreadedServer/cmake-build-debug

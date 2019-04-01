@@ -14,7 +14,11 @@
 #include <sys/socket.h>
 #include <pthread.h>
 
+
+
 #define BUF_SIZE 100
+
+
 
 //N for the number of created threads.
 // client cmd args  - client [host] [portnum] [threads] [schedalg] [filename1] [filename2]
@@ -26,7 +30,8 @@ char* Filename1;
 char* Filename2;// implement soon
 
 //for CONCUR Schedule
-pthread_barrier_t *barrier;
+pthread_barrier_t barrier;
+
 
 //for FIFO schedule
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -124,7 +129,7 @@ void doThreadJobFifo(int i){
     while(1) {
         //is it this threads turn
         while (!(turn == i)) {
-            pthread_cond_timedwait(&cond, &mutex,3);
+            pthread_cond_wait(&cond, &mutex);
         }
         //printf("turn = %d, thread= %d\n",turn,i);
         pthread_mutex_lock(&mutex);
@@ -186,15 +191,16 @@ int main(int argc, char **argv) {
 
   pthread_t *threads = calloc(numOfThreads, sizeof(pthread_t));
   int status, i;
-  int *x;
-  x=&i;
+
   //concurent scheduling?
   if(strcmp(Schedalg,"Concur")==0) {
 
       pthread_barrier_init(&barrier,NULL,numOfThreads);
 
       for (i = 0; i < numOfThreads; i++) {
-          status = pthread_create(&threads[i], NULL, doThreadJobConcur, (int *) i);
+          int *x;
+          x = &i;
+          status = pthread_create(&threads[i], NULL, (void *(*)(void *))doThreadJobConcur, x);
           if (status != 0) {
               printf("ERROR: MAKING THREAD POOL");
               exit(0);
@@ -207,7 +213,9 @@ int main(int argc, char **argv) {
       pthread_mutex_init(&mutex,NULL);
       pthread_barrier_init(&barrier,NULL,numOfThreads);
       for (i = 0; i < numOfThreads; i++) {
-              status = pthread_create(&threads[i], NULL, doThreadJobFifo, (void *) i);
+          int *x;
+          x = &i;
+              status = pthread_create(&threads[i], NULL, (void *(*)(void *)) doThreadJobFifo, x);
               if (status != 0) {
                   printf("ERROR: MAKING THREAD POOL");
                   exit(0);
