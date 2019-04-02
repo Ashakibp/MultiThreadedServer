@@ -193,7 +193,7 @@ int main(int argc, char **argv) {
   int status, i;
 
   //concurent scheduling?
-  if(strcmp(Schedalg,"Concur")==0) {
+  if(strcmp(Schedalg,"CONCUR")==0) {
 
       pthread_barrier_init(&barrier,NULL,numOfThreads);
 
