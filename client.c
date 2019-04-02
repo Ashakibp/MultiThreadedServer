@@ -128,13 +128,13 @@ void doThreadJobFifo(int i){
     char* buf = calloc(BUF_SIZE,1);
     while(1) {
         //is it this threads turn
-        pthread_mutex_lock(&mutex);
+	pthread_mutex_lock(&mutex);
         while (!(turn == i)) {
             pthread_cond_wait(&cond, &mutex);
         }
         //printf("turn = %d, thread= %d\n",turn,i);
-
-        //pthread_cond_wait(&cond, &mutex);
+        
+        
         //printf("Its's Thread %d turn\n", i);
         int clientfd;
         // Establish connection with <hostname>:<port>
@@ -159,7 +159,7 @@ void doThreadJobFifo(int i){
             turn++;
         }
         pthread_mutex_unlock(&mutex);
-        pthread_cond_signal(&cond);
+        pthread_cond_broadcast(&cond);
 
         //receive response
         while (recv(clientfd, buf, BUF_SIZE, 0) > 0) {
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
       for (i = 0; i < numOfThreads; i++) {
           int x;
           x = i;
-          status = pthread_create(&threads[i], NULL, (void *(*)(void *))doThreadJobConcur, (void *) (long)x);
+          status = pthread_create(&threads[i], NULL, (void *(*)(void *))doThreadJobConcur,(void *)(long) x);
           if (status != 0) {
               printf("ERROR: MAKING THREAD POOL");
               exit(0);
@@ -216,7 +216,8 @@ int main(int argc, char **argv) {
       for (i = 0; i < numOfThreads; i++) {
           int x;
           x = i;
-              status = pthread_create(&threads[i], NULL, (void *(*)(void *)) doThreadJobFifo, (void *) (long)x);
+
+              status = pthread_create(&threads[i], NULL, (void *(*)(void *)) doThreadJobFifo, (void *)(long)x);
               if (status != 0) {
                   printf("ERROR: MAKING THREAD POOL");
                   exit(0);
