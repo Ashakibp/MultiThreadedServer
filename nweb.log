@@ -1,0 +1,306 @@
+ INFO: nweb starting:8000:9333
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: 8211db1f-7b52-4676-80b4-d7a408020415**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:8000**accept-encoding: gzip, deflate**Connection: keep-alive****:1
+ INFO: SEND:index.html:1
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 1
+X-stat-req-arrival-time: 1075
+X-stat-req-dispatch-count: 0
+X-stat-req-complete-count: 1
+X-stat-req-complete-time: 15162
+X-stat-req-age: 1
+
+:1
+ INFO: Handled By Thread: :-390452996:1
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: 818a8abd-5790-4f86-9d80-51e0485321db**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:8000**accept-encoding: gzip, deflate**Connection: keep-alive****:2
+ INFO: SEND:index.html:2
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 2
+X-stat-req-arrival-time: 1913
+X-stat-req-dispatch-count: 2
+X-stat-req-complete-count: 3
+X-stat-req-complete-time: 16208
+X-stat-req-age: 1
+
+:2
+ INFO: Handled By Thread: :-390452996:3
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: a58bdb90-d0f3-44e6-a0c5-e86734f24289**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:8000**accept-encoding: gzip, deflate**Connection: keep-alive****:3
+ INFO: SEND:index.html:3
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 3
+X-stat-req-arrival-time: 2920
+X-stat-req-dispatch-count: 4
+X-stat-req-complete-count: 5
+X-stat-req-complete-time: 17478
+X-stat-req-age: 1
+
+:3
+ INFO: Handled By Thread: :-390452996:4
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: b8114008-5d9e-49ce-85b7-54664600afa3**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:8000**accept-encoding: gzip, deflate**Connection: keep-alive****:4
+ INFO: SEND:index.html:4
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 4
+X-stat-req-arrival-time: 4536
+X-stat-req-dispatch-count: 6
+X-stat-req-complete-count: 7
+X-stat-req-complete-time: 18805
+X-stat-req-age: 1
+
+:4
+ INFO: Handled By Thread: :-390452996:5
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: 764a89b0-e0a4-4ce4-a75a-8cde20f82f42**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:8000**accept-encoding: gzip, deflate**Connection: keep-alive****:5
+ INFO: SEND:index.html:5
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 5
+X-stat-req-arrival-time: 5754
+X-stat-req-dispatch-count: 8
+X-stat-req-complete-count: 9
+X-stat-req-complete-time: 20223
+X-stat-req-age: 1
+
+:5
+ INFO: Handled By Thread: :-390452996:6
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: 54b872d9-9933-4013-ad48-21be7a41cbc4**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:8000**accept-encoding: gzip, deflate**Connection: keep-alive****:6
+ INFO: SEND:index.html:6
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 6
+X-stat-req-arrival-time: 7397
+X-stat-req-dispatch-count: 10
+X-stat-req-complete-count: 11
+X-stat-req-complete-time: 21443
+X-stat-req-age: 1
+
+:6
+ INFO: Handled By Thread: :-390452996:6
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: 612ed838-e358-4256-a5eb-219cd7624be2**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:8000**accept-encoding: gzip, deflate**Connection: keep-alive****:7
+ INFO: SEND:index.html:7
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 7
+X-stat-req-arrival-time: 8079
+X-stat-req-dispatch-count: 12
+X-stat-req-complete-count: 13
+X-stat-req-complete-time: 22331
+X-stat-req-age: 1
+
+:7
+ INFO: Handled By Thread: :-390452996:8
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: 3595c8be-3d73-41d0-9689-3c610620c524**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:8000**accept-encoding: gzip, deflate**Connection: keep-alive****:8
+ INFO: SEND:index.html:8
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 8
+X-stat-req-arrival-time: 9357
+X-stat-req-dispatch-count: 14
+X-stat-req-complete-count: 15
+X-stat-req-complete-time: 23731
+X-stat-req-age: 1
+
+:8
+ INFO: Handled By Thread: :-390452996:9
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: d9def96e-2ff6-4de5-8358-ad850c9e307d**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:8000**accept-encoding: gzip, deflate**Connection: keep-alive****:9
+ INFO: SEND:index.html:9
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 9
+X-stat-req-arrival-time: 10732
+X-stat-req-dispatch-count: 16
+X-stat-req-complete-count: 17
+X-stat-req-complete-time: 25002
+X-stat-req-age: 1
+
+:9
+ INFO: Handled By Thread: :-390452996:10
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: 9caf016e-61fe-4bec-88c5-db70cdfbc657**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:8000**accept-encoding: gzip, deflate**Connection: keep-alive****:10
+ INFO: SEND:index.html:10
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 10
+X-stat-req-arrival-time: 12132
+X-stat-req-dispatch-count: 18
+X-stat-req-complete-count: 19
+X-stat-req-complete-time: 26381
+X-stat-req-age: 1
+
+:10
+ INFO: Handled By Thread: :-390452996:11
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: ef74a2ec-6728-4aac-8078-5ea636d8484b**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:8000**accept-encoding: gzip, deflate**Connection: keep-alive****:11
+ INFO: SEND:index.html:11
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 11
+X-stat-req-arrival-time: 13491
+X-stat-req-dispatch-count: 20
+X-stat-req-complete-count: 21
+X-stat-req-complete-time: 27725
+X-stat-req-age: 1
+
+:11
+ INFO: Handled By Thread: :-390452996:12
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: 63a92ec3-eef6-4ae0-8dde-52d20009d10a**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:8000**accept-encoding: gzip, deflate**Connection: keep-alive****:12
+ INFO: SEND:index.html:12
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 12
+X-stat-req-arrival-time: 14633
+X-stat-req-dispatch-count: 22
+X-stat-req-complete-count: 23
+X-stat-req-complete-time: 28916
+X-stat-req-age: 1
+
+:12
+ INFO: Handled By Thread: :-390452996:13
+ INFO: nweb starting:9000:9373
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: 08ec1944-9ca1-4f08-ae59-858411a66b69**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:9000**accept-encoding: gzip, deflate**Connection: keep-alive****:1
+ INFO: SEND:index.html:1
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 1
+X-stat-req-arrival-time: 1023
+X-stat-req-dispatch-count: 0
+X-stat-req-complete-count: 1
+X-stat-req-complete-time: 1787
+X-stat-req-age: 1
+
+:1
+ INFO: Handled By Thread: :-393811716:1
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: ef8d58b3-92ba-45a8-966c-dd54f2471bf5**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:9000**accept-encoding: gzip, deflate**Connection: keep-alive****:2
+ INFO: SEND:index.html:2
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 2
+X-stat-req-arrival-time: 1806
+X-stat-req-dispatch-count: 2
+X-stat-req-complete-count: 3
+X-stat-req-complete-time: 2442
+X-stat-req-age: 1
+
+:2
+ INFO: Handled By Thread: :-393811716:3
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: a352db40-382d-4924-a1eb-4c527f192545**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:9000**accept-encoding: gzip, deflate**Connection: keep-alive****:3
+ INFO: SEND:index.html:3
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 3
+X-stat-req-arrival-time: 2795
+X-stat-req-dispatch-count: 4
+X-stat-req-complete-count: 5
+X-stat-req-complete-time: 3587
+X-stat-req-age: 1
+
+:3
+ INFO: Handled By Thread: :-393811716:4
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: 2373c6d6-250c-4fc8-91a7-763606ace534**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:9000**accept-encoding: gzip, deflate**Connection: keep-alive****:4
+ INFO: SEND:index.html:4
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 4
+X-stat-req-arrival-time: 3971
+X-stat-req-dispatch-count: 6
+X-stat-req-complete-count: 7
+X-stat-req-complete-time: 4762
+X-stat-req-age: 1
+
+:4
+ INFO: Handled By Thread: :-393811716:5
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: e7798def-ad61-44ff-bde5-28c30ee5a7c0**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:9000**accept-encoding: gzip, deflate**Connection: keep-alive****:5
+ INFO: SEND:index.html:5
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 5
+X-stat-req-arrival-time: 5231
+X-stat-req-dispatch-count: 8
+X-stat-req-complete-count: 9
+X-stat-req-complete-time: 6247
+X-stat-req-age: 1
+
+:5
+ INFO: Handled By Thread: :-393811716:6
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: 2364a39c-bb0e-4afb-848a-7e4b5f3fe4f0**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:9000**accept-encoding: gzip, deflate**Connection: keep-alive****:6
+ INFO: SEND:index.html:6
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 6
+X-stat-req-arrival-time: 6627
+X-stat-req-dispatch-count: 10
+X-stat-req-complete-count: 11
+X-stat-req-complete-time: 7408
+X-stat-req-age: 1
+
+:6
+ INFO: Handled By Thread: :-393811716:7
+ INFO: request:GET / HTTP/1.1**cache-control: no-cache**Postman-Token: 0473698f-4cb8-4dc4-8b6a-0b85f2c15810**User-Agent: PostmanRuntime/7.6.0**Accept: */***Host: localhost:9000**accept-encoding: gzip, deflate**Connection: keep-alive****:7
+ INFO: SEND:index.html:7
+ INFO: Header:HTTP/1.1 200 OK
+Server: nweb/23.0
+Content-Length: 158
+Connection: close
+Content-Type: text/html
+X-stat-req-arrival-count: 7
+X-stat-req-arrival-time: 7735
+X-stat-req-dispatch-count: 12
+X-stat-req-complete-count: 13
+X-stat-req-complete-time: 8761
+X-stat-req-age: 1
+
+:7
+ INFO: Handled By Thread: :-393811716:8

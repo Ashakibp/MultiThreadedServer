@@ -128,9 +128,9 @@ void doThreadJobFifo(int i){
     char* buf = calloc(BUF_SIZE,1);
     while(1) {
         //is it this threads turn
-        pthread_mutex_lock(&mutex);//current thread takes mutex
+        pthread_mutex_lock(&mutex);
         while (!(turn == i)) {
-            pthread_cond_wait(&cond, &mutex);// if its not my turn we release mutex and sleep
+            pthread_cond_wait(&cond, &mutex);
         }
         //printf("turn = %d, thread= %d\n",turn,i);
 
@@ -159,7 +159,7 @@ void doThreadJobFifo(int i){
             turn++;
         }
         pthread_mutex_unlock(&mutex);
-        pthread_cond_broadcast(&cond); // wake up all threads
+        pthread_cond_signal(&cond);
 
         //receive response
         while (recv(clientfd, buf, BUF_SIZE, 0) > 0) {
