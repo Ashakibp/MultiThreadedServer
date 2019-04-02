@@ -159,7 +159,7 @@ void doThreadJobFifo(int i){
             turn++;
         }
         pthread_mutex_unlock(&mutex);
-        pthread_cond_signal(&cond);
+        pthread_cond_broadcast(&cond);
 
         //receive response
         while (recv(clientfd, buf, BUF_SIZE, 0) > 0) {
