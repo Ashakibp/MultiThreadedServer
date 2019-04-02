@@ -128,11 +128,12 @@ void doThreadJobFifo(int i){
     char* buf = calloc(BUF_SIZE,1);
     while(1) {
         //is it this threads turn
+        pthread_mutex_lock(&mutex);
         while (!(turn == i)) {
             pthread_cond_wait(&cond, &mutex);
         }
         //printf("turn = %d, thread= %d\n",turn,i);
-        pthread_mutex_lock(&mutex);
+
         //pthread_cond_wait(&cond, &mutex);
         //printf("Its's Thread %d turn\n", i);
         int clientfd;
@@ -198,9 +199,9 @@ int main(int argc, char **argv) {
       pthread_barrier_init(&barrier,NULL,numOfThreads);
 
       for (i = 0; i < numOfThreads; i++) {
-          int *x;
-          x = &i;
-          status = pthread_create(&threads[i], NULL, (void *(*)(void *))doThreadJobConcur, x);
+          int x;
+          x = i;
+          status = pthread_create(&threads[i], NULL, (void *(*)(void *))doThreadJobConcur, (void *) (long)x);
           if (status != 0) {
               printf("ERROR: MAKING THREAD POOL");
               exit(0);
@@ -213,9 +214,9 @@ int main(int argc, char **argv) {
       pthread_mutex_init(&mutex,NULL);
       pthread_barrier_init(&barrier,NULL,numOfThreads);
       for (i = 0; i < numOfThreads; i++) {
-          int *x;
-          x = &i;
-              status = pthread_create(&threads[i], NULL, (void *(*)(void *)) doThreadJobFifo, x);
+          int x;
+          x = i;
+              status = pthread_create(&threads[i], NULL, (void *(*)(void *)) doThreadJobFifo, (void *) (long)x);
               if (status != 0) {
                   printf("ERROR: MAKING THREAD POOL");
                   exit(0);
