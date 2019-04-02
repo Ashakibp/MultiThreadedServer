@@ -134,7 +134,7 @@ void doThreadJobFifo(int i){
         }
         //printf("turn = %d, thread= %d\n",turn,i);
 
-        //pthread_cond_wait(&cond, &mutex);
+
         //printf("Its's Thread %d turn\n", i);
         int clientfd;
         // Establish connection with <hostname>:<port>
