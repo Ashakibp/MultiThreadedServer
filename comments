@@ -1,0 +1,20 @@
+I won't go very far testing code with compile errors.
+You did not provide a Makefile, so I used my default and you code would not compile on either gcc or clang.
+ Please clean your code and re-submit.
+ Compile errors in server.c: Line 242 (long sprintf): the clock_t (time) arguments require a format specifier of %ld, not %d on a 64-bit platform.
+ Line 361: empty initializer braces are not allowed in standard C. Initialize each field of the struct or don't initialize at all.
+ In C a struct declaration without an initializer allocates space for an entire struct, unlike a Java class declaration. Line 417: you misread the type of the 3rd parameter of pthread_create.
+ It is not of type "void *". It is of type "void * (*)(void *)". That is, a pointer to a function that takes a single void* parameter and returns void*.
+ The type of the function you supply is "void (*) (int)", which is not compatible.
+
+
+
+ Compiler errors in client.c: barrier should be of type pthread_barrier_t, not pthread_barrier_t * .
+ Your code only sort-of works if sizeof(pthread_barrier_t) <= sizeof(void *) [hint: it's not.] or you get a really lucky memory layout with a gap of at least 8 bytes after barrier.
+ Otherwise, writing to barrier clobbers adjoining data or else it segfaults. Line 128: The third argument of pthread_cond_timedwait is not a time interval.
+ It is an absolute clock time. Read the man page. The number 3 is sometime back in 1970 which will always timeout immediately.
+ Line 198: Don't cast an int to an int *. Did you mean &i? Or did you compile this in a 32-bit Linux by any chance? Line 233: Similar error as line 417 in server.
+ The function pointer being passed is the wrong function signature.
+Van Kelly, Mar 28 at 9:06am
+Hi professor, I may have sent you a depreciated version of my code. I’ll double check and circle back. Thank you for your patience
+Aaron Shakibpanah, Mar 28 at 11:10am
